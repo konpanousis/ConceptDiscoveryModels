@@ -73,24 +73,8 @@ For the evaluation of a pretrained model, the command is:
 
 ## Accuracy and Sparsity:
 <style>
-table th:first-of-type {
-    font-size: 10pt;
-    width: 15%;
-}
-table th:nth-of-type(2) {
-    width: 10%;
-}
-table th:nth-of-type(3) {
-    width: 10%;
-}
-table th:nth-of-type(4) {
-    width: 10%;
-}
-table th:nth-of-type(5) {
-    width: 10%;
-}
-table th:nth-of-type(6) {
-    width: 10%;
+table {
+    width:80%;
 }
 </style>
 
