@@ -72,11 +72,6 @@ For the evaluation of a pretrained model, the command is:
 # Experimental Evaluation  
 
 ## Accuracy and Sparsity:
-<style>
-table {
-    width:80%;
-}
-</style>
 
 |                         |                    |                    | Dataset            |                    |                |
 |-------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
