@@ -2,6 +2,7 @@
 /data/CUB/
 <<<<<<< HEAD
 /.idea/
+/__pycache__/
 =======
 >>>>>>> 7925b5c (init)
-/__pycache__/
+
