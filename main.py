@@ -129,6 +129,7 @@ def train(args, loader, clip_model, concept_set, classifier, criterion, optimize
 
 def validate(args, loader, clip_model, concept_set, classifier, criterion, preprocess, disc, num_samples):
     btime, losses, top1 = [AverageMeter() for _ in range(3)]
+    avg_perc_active = 0. 
     with torch.no_grad():
         end = time.time()
         for batch, (images, labels) in enumerate(loader):
@@ -150,13 +151,12 @@ def validate(args, loader, clip_model, concept_set, classifier, criterion, prepr
                 feats = normalize(feats, dim=-1)
                 S = (feats @ text_features.T) if not args.only_images else images
 
-            avg_perc_active = 1.
             if args.discovery:
                 output = 0.
                 for _ in range(num_samples):
                     z, _ = disc(images, probs_only=True)
                     output += classifier(S, z) / num_samples
-                    avg_perc_active = (z > 0.01).cpu().numpy().mean()
+                    avg_perc_active += (z > 0.01).cpu().numpy().sum(1).mean()
 
             elif args.topk:
                 val, ind = torch.topk(S, int(args.ntopk * S.shape[1]),
@@ -186,11 +186,11 @@ def validate(args, loader, clip_model, concept_set, classifier, criterion, prepr
                       'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Avg Perc Act {avg:.4f}'.format(
                     batch, len(loader), batch_time=btime,
-                    loss=losses, top1=top1, avg=avg_perc_active))
+                    loss=losses, top1=top1, avg=avg_perc_active/batch))
 
         print(' Validation Acc@1 {top1.avg:.3f}'.format(top1=top1))
 
-    return losses.avg, top1.avg, avg_perc_active
+    return losses.avg, top1.avg, avg_perc_active/batch
 
 
 if __name__ == '__main__':
