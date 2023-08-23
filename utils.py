@@ -195,67 +195,6 @@ def bin_concrete_sample(a, temperature, eps=1e-8):
     return X
 
 
-def concept_activation_per_class(loader, disc, num_concepts,
-                                 num_classes, concepts, classes,
-                                 base_dir='saved_models', prior=True):
-    conc_act = torch.zeros([num_concepts, num_classes])
-    disc.eval()
-    with torch.no_grad():
-        count_per_class = np.zeros([num_classes])
-        for batch, (images, labels) in enumerate(loader):
-            labels = labels.type(torch.LongTensor)  # casting to long
-
-            images = images.to('cuda', non_blocking=True)
-            labels = labels
-
-            feats = images  # / images.norm(dim=-1, keepdim=True)
-
-            # probs in R^{batch, concepts}
-            probs, _ = disc(feats, probs_only=True)
-            probs = probs.cpu().numpy()
-            # set the very low probabilities to zero
-            probs[np.where(probs < 1e-2)] = 0.
-
-            if np.any(probs > 1.):
-                raise ValueError('what, probs >1?')
-
-            # add the contribution of each example to the respective entries
-
-            for i in range(num_classes):
-                batch_class_i = probs[np.where(labels == i)]
-                count_per_class[i] += batch_class_i.shape[0]
-                conc_act[:, i] += batch_class_i.sum(0)
-        conc_act /= count_per_class
-
-        results_dir = base_dir + 'prior_figs/' * prior + 'posterior_figs/' * (not prior)
-        os.makedirs(results_dir, exist_ok=True)
-
-        np.savetxt(results_dir + "concept_acts_per_class.csv", conc_act,
-                   delimiter=",", fmt='%10.5f')
-        # concept per fig
-        cpf = 40
-        for i in range(int(conc_act.shape[0] / cpf) + 1):
-            cur_act = conc_act[i * cpf: (i + 1) * cpf]
-            cur_conc = concepts[i * cpf: (i + 1) * cpf]
-            lencur = cur_act.shape[0]
-
-            fig = plt.figure(figsize=(15, 15))
-            ax = sns.heatmap(cur_act.T, cmap='binary', linewidth=0.5,
-                             square=True, vmin=0.0, vmax=1.0,
-                             cbar_kws={"shrink": .95, "ticks": [0.0, 0.25, 0.5, 0.75, 1.0],
-                                       'aspect': 50, 'pad': 0.01})
-
-            plt.xticks(np.arange(lencur) + 0.5, cur_conc,
-                       rotation=90, fontsize="8")
-            plt.yticks(np.arange(num_classes) + 0.5, classes,
-                       rotation=0, fontsize="8", va="center")
-
-            # ax.set_yticklabels(classes, minor=True)
-            plt.tight_layout()
-            plt.savefig(results_dir + 'batch_{}.pdf'.format(i), bbox_inches="tight")
-            plt.close(fig)
-
-
 def concept_activation_per_example(loader, disc, classifier, num_concepts,
                                    concepts, classes, text_features, dataset,
                                    base_dir='saved_models', ):
@@ -263,7 +202,7 @@ def concept_activation_per_example(loader, disc, classifier, num_concepts,
     classifier.eval()
 
     data = loader.dataset
-    inds = np.random.choice(np.arange(13950, 13953, 1), 3, replace=False)
+    inds = np.random.choice(np.arange(10, 500, 1), 3, replace=False)
     results_dir = base_dir + 'post_analysis/'
     os.makedirs(results_dir, exist_ok=True)
 
@@ -328,13 +267,6 @@ def concept_activation_per_example(loader, disc, classifier, num_concepts,
             sparsity = (mask > 0.01).sum() / num_concepts
 
             sort_inds = np.argsort(contribution)[::-1]
-            print(len(sort_inds))
-            print(num_concepts)
-            print(len(mask))
-            print(len(similarity))
-            print(len(rel_weights))
-            print(len(contribution))
-            print(len(concepts))
 
             with open(spec_dir + 'stats.csv', 'w') as f:
                 writer = csv.writer(f)

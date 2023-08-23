@@ -156,7 +156,7 @@ def validate(args, loader, clip_model, concept_set, classifier, criterion, prepr
                 for _ in range(num_samples):
                     z, _ = disc(images, probs_only=True)
                     output += classifier(S, z) / num_samples
-                    avg_perc_active += (z > 0.01).cpu().numpy().sum(1).mean()
+                    avg_perc_active += (z > 0.01).cpu().numpy().mean()
 
             elif args.topk:
                 val, ind = torch.topk(S, int(args.ntopk * S.shape[1]),
@@ -186,11 +186,11 @@ def validate(args, loader, clip_model, concept_set, classifier, criterion, prepr
                       'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Avg Perc Act {avg:.4f}'.format(
                     batch, len(loader), batch_time=btime,
-                    loss=losses, top1=top1, avg=avg_perc_active/batch))
+                    loss=losses, top1=top1, avg=avg_perc_active/(batch+1)))
 
         print(' Validation Acc@1 {top1.avg:.3f}'.format(top1=top1))
 
-    return losses.avg, top1.avg, avg_perc_active/batch
+    return losses.avg, top1.avg, avg_perc_active/(batch+1)
 
 
 if __name__ == '__main__':
@@ -199,10 +199,10 @@ if __name__ == '__main__':
     args.device = device
 
     concepts = [args.dataset]
-    kl_scales = [1.]
+    kl_scales = [0.0001]
     lrs = [0.001]
-    priors = [0.005]
-    mults = [1.0]
+    priors = [0.0001]
+    mults = [10.0]
     discover = [True]
     cversions = ['ViT-B/16']
 
@@ -327,7 +327,14 @@ if __name__ == '__main__':
             ckpt = torch.load(spec_dir + 'checkpoint_best.pth.tar')
             classifier.load_state_dict(ckpt['state_dict'])
             disc.load_state_dict(ckpt['disc_state_dict'])
+            print(ckpt['epoch'])
+            classifier.eval()
+            disc.eval()
 
+            val_loss, val_acc, act_perc = validate(args, val_loader, clip_model, texts,
+                                                   classifier, criterion,
+                                                   preprocess, disc, 1)
+            print(val_acc, act_perc)
             concept_activation_per_example(val_loader, disc, classifier,
                                            num_concepts, concept_set, classes,
                                            texts, args.dataset, spec_dir)
