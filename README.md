@@ -1,6 +1,7 @@
 # Sparse Linear Concept Discovery Models
 
 This is the official code implementation for the paper titled "Sparse Linear Concept Discovery Models", Accepted (Oral) @ ICCVW-CLVL 2023.
+
 We propose a novel framework towards Interpretable Deep Networks using multi-modal models and a simple yet effective concept selection mechanism.  
 
 
