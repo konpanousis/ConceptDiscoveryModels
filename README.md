@@ -2,7 +2,7 @@
 
 This is the official code implementation for the paper titled "Sparse Linear Concept Discovery Models". We propose a novel framework towards Interpretable Deep Networks using multi-modal models and a simple yet effective concept selection mechanism.  
 
-Accepted @ ICCVW-CLVL 2023
+Accepted (Oral) @ ICCVW-CLVL 2023.
 
 # Abstract 
 
